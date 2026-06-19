@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vision Capacity Intelligence: A PM Case Study for Lenskart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0D1C1B;
+  --teal:#0E6B5E;
+  --teal2:#0A4F46;
+  --teal-lt:#E4F2EF;
+  --amber:#C97200;
+  --amber-lt:#FEF3E2;
+  --paper:#F6F8F7;
+  --white:#FFFFFF;
+  --border:#D9E4E1;
+  --muted:#5C7572;
+  --nav-w:260px;
+  --r:6px;
+}
+*, *::before, *::after{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth; font-size:16px;}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;} *{animation:none!important; transition:none!important;}}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'DM Sans', system-ui, sans-serif;
+  font-weight:400;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--teal2); text-underline-offset:3px;}
+a:hover{color:var(--teal);}
+a:focus-visible{outline:2px solid var(--amber); outline-offset:3px; border-radius:2px;}
+
+/* ── LAYOUT ── */
+.page{display:grid; grid-template-columns:var(--nav-w) 1fr; min-height:100vh;}
+
+/* ── SIDENAV ── */
+.sidenav{
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  background:var(--ink); color:#9FBDBA;
+  padding:28px 0; display:flex; flex-direction:column;
+}
+.nav-brand{
+  padding:0 24px 24px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:16px;
+  display:flex; align-items:center; gap:10px;
+}
+.nav-brand .hex-icon{flex:none;}
+.nav-brand-text{font-family:'Syne',sans-serif; font-size:12px; line-height:1.4; color:#6FA09A; letter-spacing:.02em;}
+.nav-brand-text strong{display:block; color:#FFFFFF; font-size:13px; margin-bottom:1px;}
+nav ul{list-style:none; padding:0; flex:1;}
+nav ul li a{
+  display:flex; align-items:center; gap:12px; padding:9px 24px;
+  font-family:'Syne',sans-serif; font-size:12.5px; color:#6FA09A;
+  text-decoration:none; letter-spacing:.01em;
+  border-left:2px solid transparent; transition:all .15s;
+}
+nav ul li a .num{font-family:'JetBrains Mono',monospace; font-size:11px; color:#3D6864; width:18px; flex:none;}
+nav ul li a:hover{color:#FFFFFF; background:rgba(255,255,255,0.05);}
+nav ul li a.active{color:#FFFFFF; border-left-color:#0E6B5E; background:rgba(14,107,94,0.15);}
+nav ul li a.active .num{color:#4FA89F;}
+.nav-foot{
+  padding:20px 24px 0; border-top:1px solid rgba(255,255,255,0.08); margin-top:auto;
+  font-size:11.5px; color:#3D6864; line-height:1.55;
+}
+
+/* ── MAIN ── */
+main{min-width:0; display:flex; flex-direction:column; align-items:center;}
+.hero,.sources-section{width:100%;}
+
+/* ── HERO ── */
+.hero{
+  position:relative; overflow:hidden; min-height:540px;
+  background:var(--ink); color:#FFFFFF;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding:56px 64px;
+}
+#hex-canvas{position:absolute; inset:0; z-index:0;}
+.hero-inner{position:relative; z-index:2; max-width:960px; width:100%;}
+.hero-pill{
+  display:inline-flex; align-items:center; gap:8px; margin-bottom:24px;
+  background:rgba(14,107,94,0.35); border:1px solid rgba(14,107,94,0.5);
+  color:#7FD4C8; font-family:'Syne',sans-serif; font-size:11.5px;
+  letter-spacing:.07em; text-transform:uppercase; padding:5px 12px; border-radius:20px;
+}
+.hero-pill span{width:6px;height:6px;border-radius:50%;background:#4FA89F;flex:none;}
+.hero h1{
+  font-family:'DM Serif Display', Georgia, serif;
+  font-size:clamp(32px, 4vw, 52px); line-height:1.12; font-weight:400;
+  letter-spacing:-.01em; margin-bottom:22px; color:#FFFFFF;
+}
+.hero h1 em{font-style:italic; color:#4FBFB0;}
+.hero .deck{
+  font-size:17px; color:#9FBDBA; max-width:560px; line-height:1.65; margin-bottom:30px;
+}
+.hero-byline{
+  display:flex; align-items:center; gap:16px; font-family:'Syne',sans-serif; font-size:12.5px;
+  color:#4FA89F; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;
+}
+.hero-byline .name{color:#FFFFFF; font-weight:600;}
+.hero-byline .sep{color:#3D6864;}
+.hero-byline .note{background:rgba(201,114,0,0.2); color:#F5A623; padding:2px 8px; border-radius:3px;}
+
+/* ── CONTENT AREA ── */
+.content{width:100%; max-width:1120px; margin:0 auto; padding:0 64px 100px;}
+section{padding-top:80px;}
+
+.eyebrow{
+  display:flex; align-items:center; gap:10px; margin-bottom:14px;
+  font-family:'Syne',sans-serif; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--teal);
+}
+.eyebrow .n{
+  font-family:'JetBrains Mono',monospace; font-size:11px; background:var(--teal-lt);
+  color:var(--teal); padding:2px 7px; border-radius:3px;
+}
+h2{
+  font-family:'DM Serif Display', Georgia, serif;
+  font-size:clamp(24px, 3vw, 34px); font-weight:400; line-height:1.2;
+  letter-spacing:-.01em; margin-bottom:22px; color:var(--ink);
+}
+h2 em{font-style:italic; color:var(--teal2);}
+h3{
+  font-family:'Syne',sans-serif; font-size:16px; font-weight:700;
+  color:var(--teal2); margin:32px 0 12px; letter-spacing:-.01em;
+}
+p{margin-bottom:18px; color:#2C3E3D; font-size:17px;}
+ul.prose{margin:0 0 18px; padding-left:20px;}
+ul.prose li{margin-bottom:9px; font-size:17px; color:#2C3E3D;}
+strong{color:var(--ink); font-weight:500;}
+
+/* ── CALLOUT ── */
+.callout{
+  background:var(--ink); color:#FFFFFF; border-radius:8px;
+  padding:28px 30px; margin:28px 0;
+}
+.callout .ql{font-family:'DM Serif Display', serif; font-size:22px; font-style:italic; color:#4FBFB0; line-height:1.35; margin-bottom:14px;}
+.callout .shift{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; margin-top:18px;}
+.callout .shift-box{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:14px 16px;}
+.callout .shift-label{font-family:'Syne',sans-serif; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:#4FA89F; margin-bottom:6px;}
+.callout .shift-text{font-size:15px; color:#FFFFFF; line-height:1.4;}
+.callout .arrow{font-size:22px; color:#3D6864; text-align:center;}
+
+/* ── WHY NOW SIGNALS ── */
+.signal-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:20px 0 28px;}
+.sig{
+  background:var(--white); border:1px solid var(--border); border-radius:8px;
+  padding:20px 20px 18px; position:relative; overflow:hidden;
+}
+.sig::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--teal);
+}
+.sig.amber::before{background:var(--amber);}
+.sig .sig-label{
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted);
+  letter-spacing:.05em; text-transform:uppercase; margin-bottom:10px;
+}
+.sig h4{font-family:'Syne',sans-serif; font-size:15px; color:var(--ink); font-weight:700; margin-bottom:8px; line-height:1.3;}
+.sig p{font-size:14.5px; color:var(--muted); margin:0; line-height:1.5;}
+.sig .src-badge{
+  display:inline-block; margin-top:10px; font-family:'JetBrains Mono',monospace;
+  font-size:10.5px; color:var(--teal2); background:var(--teal-lt);
+  padding:2px 7px; border-radius:3px; text-decoration:none;
+}
+.sig .src-badge:hover{background:var(--teal); color:#FFFFFF;}
+
+/* ── LOOP DIAGRAM ── */
+.loop-wrap{
+  background:var(--white); border:1px solid var(--border); border-radius:10px;
+  padding:32px; margin:28px 0; overflow:hidden;
+}
+.loop-title{font-family:'Syne',sans-serif; font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin-bottom:24px; text-align:center;}
+.loop-diagram{position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.loop-node{
+  flex:1; background:var(--teal-lt); border:1.5px solid var(--border); border-radius:8px;
+  padding:14px 10px; text-align:center; cursor:default; transition:all .2s;
+  position:relative;
+}
+.loop-node:hover{background:var(--teal); border-color:var(--teal);}
+.loop-node:hover .ln-icon, .loop-node:hover .ln-title, .loop-node:hover .ln-sub{color:#FFFFFF;}
+.loop-node.highlight{background:var(--teal); border-color:var(--teal);}
+.loop-node.highlight .ln-icon, .loop-node.highlight .ln-title, .loop-node.highlight .ln-sub{color:#FFFFFF;}
+.ln-icon{font-size:20px; margin-bottom:8px; display:block;}
+.ln-title{font-family:'Syne',sans-serif; font-size:12px; font-weight:700; color:var(--teal2); display:block; margin-bottom:3px; line-height:1.2;}
+.ln-sub{font-size:11px; color:var(--muted); display:block; line-height:1.3;}
+.loop-arrow{flex:none; color:var(--border); font-size:18px; font-weight:300;}
+
+/* ── CAPABILITIES ── */
+.cap-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:20px 0 28px;}
+.cap{
+  background:var(--white); border:1px solid var(--border); border-radius:8px;
+  padding:22px 22px 20px; display:flex; flex-direction:column;
+}
+.cap-num{
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--amber);
+  background:var(--amber-lt); display:inline-block; padding:2px 7px;
+  border-radius:3px; margin-bottom:14px; letter-spacing:.04em; width:fit-content;
+}
+.cap h4{font-family:'Syne',sans-serif; font-size:15.5px; font-weight:700; color:var(--ink); margin-bottom:9px; line-height:1.3;}
+.cap p{font-size:14.5px; color:var(--muted); line-height:1.55; margin:0;}
+
+/* ── TRUST CARD ── */
+.trust-card{
+  background:linear-gradient(135deg, #0D1C1B 0%, #0A2E2A 100%);
+  border-radius:10px; padding:28px 30px; margin:24px 0; color:#FFFFFF;
+}
+.trust-card .tc-label{font-family:'Syne',sans-serif; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#4FBFB0; margin-bottom:16px;}
+.rec-example{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:18px; margin-bottom:16px;}
+.rec-header{font-family:'Syne',sans-serif; font-size:12px; color:#4FBFB0; letter-spacing:.05em; text-transform:uppercase; margin-bottom:10px;}
+.rec-body{font-size:16px; color:#FFFFFF; margin-bottom:12px; font-weight:500;}
+.rec-row{display:flex; gap:8px; flex-wrap:wrap;}
+.rec-chip{
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  padding:4px 10px; border-radius:4px; display:inline-flex; align-items:center; gap:5px;
+}
+.chip-conf{background:rgba(14,107,94,0.3); color:#4FBFB0; border:1px solid rgba(79,168,159,0.3);}
+.chip-why{background:rgba(255,255,255,0.06); color:#9FBDBA; border:1px solid rgba(255,255,255,0.1);}
+.action-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+.act-btn{
+  font-family:'Syne',sans-serif; font-size:12px; font-weight:600;
+  padding:6px 14px; border-radius:4px; cursor:pointer; border:none; letter-spacing:.03em;
+  transition:all .15s;
+}
+.btn-accept{background:var(--teal); color:#FFFFFF;}
+.btn-modify{background:rgba(255,255,255,0.1); color:#FFFFFF; border:1px solid rgba(255,255,255,0.2);}
+.btn-reject{background:rgba(255,80,80,0.15); color:#FF7F7F; border:1px solid rgba(255,80,80,0.2);}
+.trust-note{font-size:14px; color:#4FA89F; line-height:1.55;}
+
+/* ── PM RANKING ── */
+.ranking{border:1px solid var(--border); border-radius:8px; overflow:hidden; margin:24px 0;}
+.rank-item{display:flex; align-items:flex-start; gap:16px; padding:18px 20px; border-bottom:1px solid var(--border); background:var(--white);}
+.rank-item:last-child{border-bottom:none; background:var(--ink); color:#FFFFFF;}
+.rank-item:last-child .rank-badge{background:var(--teal)!important; color:#FFFFFF!important;}
+.rank-item:last-child .rank-text{color:#9FBDBA;}
+.rank-item:last-child .rank-quote{color:#FFFFFF;}
+.rank-badge{
+  flex:none; font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+  padding:4px 10px; border-radius:4px; letter-spacing:.04em; margin-top:2px;
+}
+.b-avg{background:#F3F4F6; color:#6B7280;}
+.b-good{background:#FEF3E2; color:#92400E;}
+.b-vg{background:#DBEAFE; color:#1E40AF;}
+.b-exc{background:var(--teal-lt); color:var(--teal2);}
+.rank-text{font-size:14px; color:var(--muted); margin-bottom:0;}
+.rank-quote{font-family:'DM Serif Display',serif; font-size:16px; color:var(--ink);}
+
+/* ── METRICS TABLE ── */
+.mtable{width:100%; border-collapse:collapse; margin:14px 0 24px; border-radius:8px; overflow:hidden; border:1px solid var(--border);}
+.mtable thead th{
+  background:var(--ink); color:#9FBDBA; text-align:left; padding:12px 16px;
+  font-family:'Syne',sans-serif; font-size:12px; letter-spacing:.05em; text-transform:uppercase;
+}
+.mtable thead th:first-child{border-radius:0;}
+.mtable tbody tr{background:var(--white);}
+.mtable tbody tr:nth-child(even){background:#FAFCFB;}
+.mtable tbody td{padding:13px 16px; border-bottom:1px solid var(--border); vertical-align:top; font-size:15px; color:#2C3E3D;}
+.mtable tbody tr:last-child td{border-bottom:none;}
+.mtable .dim{font-family:'Syne',sans-serif; font-weight:700; color:var(--teal2); font-size:14px;}
+.m-dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block;margin-right:8px;vertical-align:middle;}
+
+/* ── PHASES ── */
+.phases{margin:20px 0;}
+.phase-item{display:flex; gap:0; margin-bottom:0; position:relative;}
+.phase-item::before{
+  content:''; position:absolute; left:28px; top:60px; bottom:-1px; width:2px;
+  background:var(--border); z-index:0;
+}
+.phase-item:last-child::before{display:none;}
+.phase-dot{
+  flex:none; width:56px; display:flex; flex-direction:column; align-items:center; gap:0; z-index:1; padding-top:4px;
+}
+.phase-circle{
+  width:40px; height:40px; border-radius:50%; background:var(--teal); border:3px solid var(--paper);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:13px; color:#FFFFFF; font-weight:500;
+  box-shadow:0 0 0 2px var(--teal);
+}
+.phase-body{flex:1; padding:2px 0 40px 16px;}
+.phase-body h4{font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--ink); margin-bottom:6px;}
+.phase-body p{font-size:15.5px; color:var(--muted); margin:0; line-height:1.55;}
+.phase-tag-pill{
+  display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px;
+  color:var(--teal2); background:var(--teal-lt); padding:2px 8px; border-radius:3px;
+  margin-bottom:8px; letter-spacing:.04em;
+}
+
+/* ── CLOSING ── */
+.closing-box{
+  border:1.5px dashed var(--amber); border-radius:8px; padding:22px 24px; margin:20px 0;
+  background:var(--amber-lt);
+}
+.closing-box .cb-label{font-family:'Syne',sans-serif; font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--amber); margin-bottom:10px;}
+.closing-box p{font-size:16px; color:#7C5200; margin:0; font-style:italic; line-height:1.6;}
+
+/* ── SOURCES FOOTER ── */
+.sources-section{background:var(--ink); color:#9FBDBA; padding:72px 64px 64px;}
+.sources-section h2{color:#FFFFFF; margin-bottom:30px;}
+.sources-section .eyebrow{color:#4FBFB0;}
+.src-list{display:flex; flex-direction:column; gap:0;}
+.src-item{
+  display:grid; grid-template-columns:32px 1fr; gap:14px;
+  padding:16px 0; border-bottom:1px solid rgba(255,255,255,0.08);
+  align-items:start;
+}
+.src-item:first-child{border-top:1px solid rgba(255,255,255,0.08);}
+.src-n{font-family:'JetBrains Mono',monospace; font-size:12px; color:#3D6864; padding-top:2px;}
+.src-body a{color:#FFFFFF; font-size:15px; font-weight:500; text-decoration:none; display:block; margin-bottom:3px; line-height:1.4;}
+.src-body a:hover{color:#4FBFB0;}
+.src-meta{font-family:'Syne',sans-serif; font-size:12px; color:#3D6864; letter-spacing:.02em;}
+.src-note{font-size:13px; color:#3D6864; padding-top:24px; border-top:1px solid rgba(255,255,255,0.06); margin-top:20px; line-height:1.6;}
+cite-ref{font-family:'JetBrains Mono',monospace; font-size:11px; vertical-align:super; line-height:0;}
+cite-ref a{color:var(--teal); text-decoration:none; background:var(--teal-lt); padding:1px 4px; border-radius:2px; margin-left:1px;}
+cite-ref a:hover{background:var(--teal); color:#FFFFFF;}
+
+/* ── SECTION DIVIDER ── */
+.sec-div{display:flex; align-items:center; gap:12px; margin:0; padding-top:80px; opacity:.4;}
+.sec-div::before, .sec-div::after{content:''; flex:1; height:1px; background:var(--border);}
+.sec-div-icon{display:flex; gap:5px;}
+
+/* ── SCROLL REVEAL ── */
+.fade{opacity:0; transform:translateY(16px); transition:opacity .55s ease, transform .55s ease;}
+.fade.in{opacity:1; transform:translateY(0);}
+
+/* ── MOBILE ── */
+@media(max-width:900px){
+  .page{grid-template-columns:1fr;}
+  .sidenav{
+    position:sticky; top:0; height:auto; flex-direction:row; padding:12px 20px;
+    background:var(--ink); z-index:100; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .nav-brand{border:none; padding:0; margin:0; flex:none;}
+  .nav-brand-text span:not(strong){display:none;}
+  nav{overflow-x:auto;}
+  nav ul{flex-direction:row; display:flex; flex-wrap:nowrap;}
+  nav ul li a{white-space:nowrap; border-left:none; border-bottom:2px solid transparent; padding:8px 14px;}
+  nav ul li a.active{border-left:none; border-bottom-color:var(--teal);}
+  .nav-foot{display:none;}
+  .hero{padding:36px 24px;}
+  .content{padding:0 24px 80px;}
+  .signal-grid, .cap-grid{grid-template-columns:1fr;}
+  .loop-diagram{flex-wrap:wrap; gap:10px;}
+  .loop-arrow{display:none;}
+  .loop-node{flex:calc(50% - 5px);}
+  .callout .shift{grid-template-columns:1fr;}
+  .callout .arrow{transform:rotate(90deg);}
+  .sources-section{padding:48px 24px;}
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- SIDENAV -->
+<div class="sidenav">
+  <div class="nav-brand">
+    <svg class="hex-icon" width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="none" stroke="#0E6B5E" stroke-width="2"/>
+      <polygon points="16,8 22,11.5 22,18.5 16,22 10,18.5 10,11.5" fill="#0E6B5E" opacity=".5"/>
+    </svg>
+    <div class="nav-brand-text">
+      <strong>Vision Capacity Intelligence</strong>
+      A PM Case Study for Lenskart
+    </div>
+  </div>
+  <nav>
+    <ul id="navlist">
+      <li><a href="#summary"><span class="num">01</span>Executive Summary</a></li>
+      <li><a href="#observation"><span class="num">02</span>The Observation</a></li>
+      <li><a href="#whynow"><span class="num">03</span>Why Now</a></li>
+      <li><a href="#problem"><span class="num">04</span>The Problem</a></li>
+      <li><a href="#product"><span class="num">05</span>Proposed Product</a></li>
+      <li><a href="#capabilities"><span class="num">06</span>Core Capabilities</a></li>
+      <li><a href="#trust"><span class="num">07</span>AI Trust Layer</a></li>
+      <li><a href="#evaluation"><span class="num">08</span>AI Evaluation &amp; Continuous Learning</a></li>
+      <li><a href="#metrics"><span class="num">09</span>Success Metrics</a></li>
+      <li><a href="#rollout"><span class="num">10</span>Rollout</a></li>
+      <li><a href="#fit"><span class="num">11</span>Why This Fits FY27</a></li>
+      <li><a href="#closing"><span class="num">→</span>Why I'm Sharing This</a></li>
+    </ul>
+  </nav>
+  <div class="nav-foot">Built from public filings, earnings-call coverage &amp; Lenskart's own tech pages. No internal data used.</div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <canvas id="hex-canvas" aria-hidden="true"></canvas>
+    <div class="hero-inner">
+      <div class="hero-pill"><span></span>PM Case Study: Prepared for Karthik Kapahi, Product, Lenskart</div>
+      <h1>GeoIQ knows where to put a store.<br>The harder question is <em>where to put a doctor.</em></h1>
+      <p class="deck">A proposal for extending Lenskart's location-intelligence engine into a Vision Capacity Intelligence Platform: connecting store siting, optometrist allocation, remote eye testing, and manufacturing into one decision loop.</p>
+      <div class="hero-byline">
+        <span class="name">[Your Name]</span>
+        <span class="sep">·</span>
+        <span>[email]</span>
+        <span class="sep">·</span>
+        <span>[LinkedIn]</span>
+        <span class="sep">·</span>
+        <span class="note">Every claim is cited: see Sources</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- 01 EXEC SUMMARY -->
+    <section id="summary">
+      <p class="eyebrow"><span class="n">01</span>Executive Summary</p>
+      <h2>The next <em>GeoIQ problem</em> isn't square footage: it's clinical capacity.</h2>
+      <p class="fade">Lenskart has told the market exactly what FY27 looks like: a shift from a consumer-tech company to a consumer-AI company, with AI threaded through eye testing, manufacturing, store operations, and the app simultaneously, not as one flagship feature.<cite-ref><a href="#src3">3</a></cite-ref></p>
+      <p class="fade">At the same time, the company just completed buying out the remaining 7.65% of GeoIQ (Quantduo Technologies), taking it to 100% ownership in June 2026.<cite-ref><a href="#src1">1</a></cite-ref> Read together, those two facts point past the obvious next step. GeoIQ already answers <strong>"where should Lenskart open a store."</strong> The harder, more strategically central question, one Lenskart has flagged but not visibly solved, is <strong>"where should Lenskart deploy its scarce supply of eye-care capacity."</strong></p>
+      <p class="fade">This case study proposes a <strong>Vision Capacity Intelligence Platform</strong>: the same hyperlocal modelling GeoIQ uses for site selection, redirected at optometrist allocation, remote testing rollout, and prescription level inventory, closed into a feedback loop with manufacturing.</p>
+    </section>
+
+    <!-- 02 OBSERVATION -->
+    <section id="observation">
+      <p class="eyebrow"><span class="n">02</span>The Observation</p>
+      <h2>Three strong assets. <em>No connective tissue.</em></h2>
+      <p class="fade">Lenskart has built three genuinely differentiated capabilities, each publicly highlighted as strategic, each currently running as a separate system:</p>
+
+      <div class="loop-wrap fade">
+        <p class="loop-title">The Intelligence Loop: proposed connection across existing assets</p>
+        <div class="loop-diagram">
+          <div class="loop-node highlight">
+            <span class="ln-icon">⬡</span>
+            <span class="ln-title">GeoIQ</span>
+            <span class="ln-sub">Location &amp; demand modelling</span>
+          </div>
+          <div class="loop-arrow">→</div>
+          <div class="loop-node">
+            <span class="ln-icon">🏪</span>
+            <span class="ln-title">Store Planning</span>
+            <span class="ln-sub">Where to open</span>
+          </div>
+          <div class="loop-arrow">→</div>
+          <div class="loop-node">
+            <span class="ln-icon">👁</span>
+            <span class="ln-title">Remote Optometry</span>
+            <span class="ln-sub">Clinical capacity</span>
+          </div>
+          <div class="loop-arrow">→</div>
+          <div class="loop-node">
+            <span class="ln-icon">📋</span>
+            <span class="ln-title">Eye Test Data</span>
+            <span class="ln-sub">Demand &amp; prescription signals</span>
+          </div>
+          <div class="loop-arrow">→</div>
+          <div class="loop-node">
+            <span class="ln-icon">🏭</span>
+            <span class="ln-title">Manufacturing</span>
+            <span class="ln-sub">Lens &amp; frame production</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="fade">GeoIQ predicts where demand exists. Remote optometry addresses the optometrist shortage. Manufacturing responds to product demand. The opportunity is to connect these into a continuous intelligence loop rather than three isolated capabilities operating in sequence.</p>
+    </section>
+
+    <!-- 03 WHY NOW -->
+    <section id="whynow">
+      <p class="eyebrow"><span class="n">03</span>Why Now</p>
+      <h2>Four public signals <em>pointing at the same gap</em></h2>
+
+      <div class="signal-grid fade">
+        <div class="sig">
+          <p class="sig-label">Signal A</p>
+          <h4>GeoIQ is now wholly owned</h4>
+          <p>Lenskart completed the acquisition of the remaining 7.65% stake in Quantduo Technologies in June 2026, moving from 92.35% to 100% ownership. It's now a fully integrated capability, an internal build decision, not a vendor negotiation.</p>
+          <a class="src-badge" href="#src1">→ Source 1</a>
+        </div>
+        <div class="sig amber">
+          <p class="sig-label">Signal B</p>
+          <h4>Management named the destination explicitly</h4>
+          <p>On the Q4 FY26 earnings call, Peyush Bansal described FY27's engine as turning Lenskart into a consumer-AI company with AI embedded into manufacturing, eye testing, sales automation and delivery as one connected system, not a feature list.</p>
+          <a class="src-badge" href="#src3">→ Source 3</a>
+        </div>
+        <div class="sig amber">
+          <p class="sig-label">Signal C</p>
+          <h4>The eye test bottleneck is explicit and large</h4>
+          <p>Lenskart conducts ~30 million eye tests a year and has publicly stated a target of 100 million, a scale-up that optometrist hiring alone cannot solve. Remote optometry and AI-driven testing are the stated path forward.</p>
+          <a class="src-badge" href="#src5">→ Source 5</a>
+        </div>
+        <div class="sig">
+          <p class="sig-label">Signal D</p>
+          <h4>Remote optometry is proven, not hypothetical</h4>
+          <p>eye test volume grew 60% year-on-year in Q3 FY26, with 49% being first-time exams, growth credited directly to remote optometry and AI-driven testing infrastructure. The model works at scale.</p>
+          <a class="src-badge" href="#src4">→ Source 4</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 PROBLEM -->
+    <section id="problem">
+      <p class="eyebrow"><span class="n">04</span>The Problem</p>
+      <h2>Opening a store is a one-time decision. <em>Staffing it is a compounding one.</em></h2>
+
+      <div class="callout fade">
+        <p class="ql">"GeoIQ optimizes where Lenskart deploys physical infrastructure. The next opportunity is optimizing where Lenskart deploys healthcare capacity."</p>
+        <div class="shift">
+          <div class="shift-box">
+            <p class="shift-label">Today: GeoIQ answers</p>
+            <p class="shift-text">Where should we open a store in Whitefield?</p>
+          </div>
+          <div class="arrow">→</div>
+          <div class="shift-box">
+            <p class="shift-label">Proposed: VCI answers</p>
+            <p class="shift-text">What vision-care capacity should that catchment have over the next 30–90 days?</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="fade">GeoIQ's hyperlocal intelligence currently stops at the door. There's limited public evidence that the same modelling is used for optometrist deployment, remote testing rollout, diagnostic equipment placement, or prescription-level inventory forecasting. As eye test volume scales toward 100 million, capacity allocation stops being a nice-to-have. It becomes the variable that determines whether a store converts a patient into a customer.</p>
+    </section>
+
+    <!-- 05 PROPOSED PRODUCT -->
+    <section id="product">
+      <p class="eyebrow"><span class="n">05</span>Proposed Product</p>
+      <h2>Vision Capacity Intelligence Platform</h2>
+      <p class="fade">A decision intelligence system that extends GeoIQ's hyperlocal modelling from a one-time siting decision into a continuous operating signal for every store and micro-market, using data Lenskart already captures.</p>
+
+      <div class="ranking fade">
+        <div class="rank-item">
+          <span class="rank-badge b-avg">Average</span>
+          <div>
+            <p class="rank-text">Generic AI improvement</p>
+            <p class="rank-quote">"Let's forecast inventory better."</p>
+          </div>
+        </div>
+        <div class="rank-item">
+          <span class="rank-badge b-good">Good</span>
+          <div>
+            <p class="rank-text">One domain, one use case</p>
+            <p class="rank-quote">"Let's extend GeoIQ into store operations."</p>
+          </div>
+        </div>
+        <div class="rank-item">
+          <span class="rank-badge b-vg">Very Good</span>
+          <div>
+            <p class="rank-text">Connects location intelligence to clinical planning</p>
+            <p class="rank-quote">"Let's extend GeoIQ into vision-demand forecasting and optometry capacity planning."</p>
+          </div>
+        </div>
+        <div class="rank-item">
+          <span class="rank-badge b-exc">Exceptional</span>
+          <div>
+            <p class="rank-text">Directly aligned with Lenskart's stated FY27 architecture</p>
+            <p class="rank-quote">"Let's build a Vision Capacity Intelligence platform that uses GeoIQ, eye test demand, remote optometry, and manufacturing feedback loops to help Lenskart achieve its stated goal of becoming a consumer-AI company where AI connects every layer of the value chain."</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 CAPABILITIES -->
+    <section id="capabilities">
+      <p class="eyebrow"><span class="n">06</span>Core Capabilities</p>
+      <h2>Four capabilities, one loop</h2>
+
+      <div class="cap-grid fade">
+        <div class="cap">
+          <span class="cap-num">CAP 01</span>
+          <h4>Vision Demand Forecasting</h4>
+          <p>Predict eye test demand, appointment volume, and prescription mix at a micro-market level, not just a store-level aggregate. The same hexagonal segmentation GeoIQ already uses, pointed at clinical demand rather than footfall.<cite-ref><a href="#src6">6</a></cite-ref></p>
+        </div>
+        <div class="cap">
+          <span class="cap-num">CAP 02</span>
+          <h4>Optometrist Capacity Planning</h4>
+          <p>Recommend remote-optometrist allocation, staffing windows, and diagnostic-equipment placement against that forecast, routing scarce optometrists to where demand is highest, not spreading them evenly.<cite-ref><a href="#src5">5</a></cite-ref></p>
+        </div>
+        <div class="cap">
+          <span class="cap-num">CAP 03</span>
+          <h4>Prescription-Aware Inventory</h4>
+          <p>Forecast lens and frame demand by prescription category, not just SKU count, using GeoIQ's micro-market demographics cross-referenced with eye test outcomes and purchase history.<cite-ref><a href="#src6">6</a></cite-ref></p>
+        </div>
+        <div class="cap">
+          <span class="cap-num">CAP 04</span>
+          <h4>Manufacturing Feedback Loop</h4>
+          <p>Route store-level demand signals upstream into Lenskart's in-house lens and frame production planning. Bansal has explicitly said eye test data should inform product design, this makes it operational.<cite-ref><a href="#src3">3</a></cite-ref></p>
+        </div>
+      </div>
+
+      <h3>Data Inputs</h3>
+      <p class="fade">Every input is data Lenskart already captures, no new infrastructure required to start.</p>
+      <ul class="prose fade">
+        <li><strong>GeoIQ:</strong> mobility patterns, catchment clustering, demographic segmentation, travel-time analytics <cite-ref><a href="#src7">7</a></cite-ref></li>
+        <li><strong>Eye-care signals:</strong> test bookings, walk-in tests, remote optometry utilisation, prescription types, repeat exam rates <cite-ref><a href="#src6">6</a></cite-ref></li>
+        <li><strong>Commerce signals:</strong> frame and lens purchase mix, conversion rate, seasonal demand patterns</li>
+        <li><strong>Store-ops signals:</strong> staffing schedules, appointment wait times, inventory movement, POS data</li>
+      </ul>
+    </section>
+
+    <!-- 07 TRUST -->
+    <section id="trust">
+      <p class="eyebrow"><span class="n">07</span>AI Trust Layer</p>
+      <h2>Governance is an <em>enabling layer</em>, not the product.</h2>
+      <p class="fade">The biggest risk to AI adoption in operations isn't prediction quality. It's trust. If recommendations affecting staffing, patient appointments, and clinical workflows become a black box, adoption falls, override rates rise, and ROI disappears before Phase 2 even starts. This is especially true as Lenskart expands into AI-driven eye testing where a wrong recommendation isn't a bad frame suggestion, it's a delayed prescription.<cite-ref><a href="#src3">3</a></cite-ref></p>
+
+      <div class="trust-card fade">
+        <p class="tc-label">What a recommendation should look like</p>
+        <div class="rec-example">
+          <p class="rec-header">Recommended action</p>
+          <p class="rec-body">Increase remote optometry slots by 20% at Whitefield store, next 3 weeks</p>
+          <div class="rec-row">
+            <span class="rec-chip chip-conf">⬡ Confidence: 84%</span>
+            <span class="rec-chip chip-why">↑ 3-week booking growth</span>
+            <span class="rec-chip chip-why">⏱ Rising wait times</span>
+            <span class="rec-chip chip-why">👁 +31% first-time screens</span>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="act-btn btn-accept">✓ Accept</button>
+          <button class="act-btn btn-modify">↗ Modify</button>
+          <button class="act-btn btn-reject">✕ Reject</button>
+        </div>
+        <p class="trust-note" style="margin-top:16px;">Override behaviour becomes training data, it should fall over time because confidence builds, not because no one's checking. Store managers seeing their overrides improve the model is the flywheel that earns adoption.</p>
+      </div>
+    </section>
+
+    <!-- 08 EVALUATION -->
+    <section id="evaluation">
+      <p class="eyebrow"><span class="n">08</span>AI Evaluation &amp; Continuous Learning</p>
+      <h2>Recommendations must improve. <em>And we must know they're improving.</em></h2>
+      <p class="fade">The value of Vision Capacity Intelligence does not come from generating recommendations, it comes from generating recommendations that consistently improve operational outcomes. Unlike traditional software, recommendation quality cannot be assumed after deployment. Forecasting models, demand signals, and AI-driven recommendations must be continuously evaluated against real-world outcomes to ensure accuracy remains aligned with business goals.</p>
+
+      <table class="mtable fade">
+        <thead>
+          <tr>
+            <th style="width:35%">Evaluation Dimension</th>
+            <th>Example Metric</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="dim">Forecast Accuracy</td>
+            <td>MAPE on eye test demand predictions</td>
+          </tr>
+          <tr>
+            <td class="dim">Recommendation Quality</td>
+            <td>% of staffing recommendations accepted</td>
+          </tr>
+          <tr>
+            <td class="dim">Business Impact</td>
+            <td>Wait-time reduction, conversion uplift</td>
+          </tr>
+          <tr>
+            <td class="dim">Trust Calibration</td>
+            <td>Override rate vs confidence score</td>
+          </tr>
+          <tr>
+            <td class="dim">Model Drift</td>
+            <td>Accuracy degradation across regions or seasons</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="fade">Store manager overrides become particularly valuable signals. An override is not necessarily a failure, it can become labeled feedback that helps improve future recommendations and identify blind spots in the forecasting system. Over time, this creates a continuous learning loop where recommendation quality, trust, and operational outcomes are measured together rather than independently.</p>
+
+      <div class="sig" style="border-left:3px solid var(--teal); padding:20px 22px; margin:28px 0; background:var(--white);">
+        <p style="font-size:13px; color:var(--muted); margin-bottom:10px; letter-spacing:.05em; text-transform:uppercase; font-family:'Syne',sans-serif;">What this section demonstrates</p>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <span style="background:var(--teal-lt); color:var(--teal2); padding:3px 9px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace;">Recommendation Evaluation</span>
+          <span style="background:var(--teal-lt); color:var(--teal2); padding:3px 9px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace;">Feedback Loops</span>
+          <span style="background:var(--teal-lt); color:var(--teal2); padding:3px 9px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace;">Trust Calibration</span>
+          <span style="background:var(--amber-lt); color:#92400E; padding:3px 9px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace;">AI Governance</span>
+          <span style="background:var(--amber-lt); color:#92400E; padding:3px 9px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace;">Measurement</span>
+          <span style="background:#E8F0FE; color:#1E40AF; padding:3px 9px; border-radius:3px; font-size:12px; font-family:'JetBrains Mono',monospace;">Human-in-the-Loop</span>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin-top:12px; margin-bottom:0;"></p>
+      </div>
+
+      <div class="callout fade">
+        <p class="ql">"Store manager overrides should be treated as evaluation data, not simply exceptions."</p>
+        <p style="color:#9FBDBA; font-size:15px; margin-top:10px;">Human-in-the-loop thinking · Evaluation thinking · Product thinking · AI governance thinking, all in one sentence.</p>
+      </div>
+    </section>
+
+    <!-- 09 METRICS -->
+    <section id="metrics">
+      <p class="eyebrow"><span class="n">09</span>Success Metrics</p>
+      <h2>Beyond delivery. <em>Beyond accuracy.</em></h2>
+      <p class="fade">The metrics that go beyond delivery: adoption, accuracy, automation, business impact, and trust. Here's how I'd define them for this product specifically.</p>
+
+      <table class="mtable fade">
+        <thead>
+          <tr>
+            <th style="width:30%">Dimension</th>
+            <th>What It Measures</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="dim"><span class="m-dot" style="background:#0E6B5E"></span>Adoption</td>
+            <td>% of stores/managers actively acting on recommendations vs. ignoring them. Measured weekly, not at launch.</td>
+          </tr>
+          <tr>
+            <td class="dim"><span class="m-dot" style="background:#C97200"></span>Accuracy</td>
+            <td>Forecast error (MAPE) on eye test demand, staffing load, and prescription-category inventory. Tracked per cohort, not globally.</td>
+          </tr>
+          <tr>
+            <td class="dim"><span class="m-dot" style="background:#0E6B5E"></span>Automation</td>
+            <td>% of restocking and scheduling decisions accepted without manual override, grows as trust compounds.</td>
+          </tr>
+          <tr>
+            <td class="dim"><span class="m-dot" style="background:#C97200"></span>Business Impact</td>
+            <td>Wait-time reduction, eye test conversion uplift, revenue per store, reduced inventory carrying cost.</td>
+          </tr>
+          <tr>
+            <td class="dim"><span class="m-dot" style="background:#0E6B5E"></span>Trust</td>
+            <td>Override rate over time. Should fall because confidence builds, not because managers stopped reading recommendations. Confidence calibration checked quarterly.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 10 ROLLOUT -->
+    <section id="rollout">
+      <p class="eyebrow"><span class="n">10</span>Rollout</p>
+      <h2>Three phases. <em>In order.</em></h2>
+      <p class="fade">Each phase validates trust before expanding scope, because staffing recommendations that aren't trusted kill the product before manufacturing feedback loops are even on the table.</p>
+
+      <div class="phases fade">
+        <div class="phase-item">
+          <div class="phase-dot"><div class="phase-circle">1</div></div>
+          <div class="phase-body">
+            <p class="phase-tag-pill">PILOT · 30–50 STORES · ONE CITY</p>
+            <h4>Vision Demand Forecasting</h4>
+            <p>Forecast eye test demand only, validated against existing manual planning. No automated action yet. Goal: establish that the model is accurate enough to trust, and that managers will look at it.</p>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-dot"><div class="phase-circle">2</div></div>
+          <div class="phase-body">
+            <p class="phase-tag-pill">EXPAND · ONE REGION</p>
+            <h4>Capacity Planning</h4>
+            <p>Add staffing recommendations and remote-optometry allocation once forecasting trust is earned. Wait-time reduction becomes measurable here. Override rate should start declining.</p>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-dot"><div class="phase-circle">3</div></div>
+          <div class="phase-body">
+            <p class="phase-tag-pill">NATIONAL · CLOSED LOOP</p>
+            <h4>Manufacturing Intelligence</h4>
+            <p>Connect store-level demand signals to lens and frame production planning. Completing the chain Bansal described: eye test data informing product design, demand signals reaching manufacturing in days, not weeks.<cite-ref><a href="#src3">3</a></cite-ref></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 FIT -->
+    <section id="fit">
+      <p class="eyebrow"><span class="n">11</span>Why This Fits FY27</p>
+      <h2>Not a feature. <em>The connective layer.</em></h2>
+      <p class="fade">Lenskart's public language isn't "add an AI feature", it's "connect the value chain." The company has explicitly said eye test data should shape product design, and consumer signals should reach manufacturing in days rather than weeks.<cite-ref><a href="#src3">3</a></cite-ref><cite-ref><a href="#src5">5</a></cite-ref></p>
+      <p class="fade">Vision Capacity Intelligence is the missing connective layer between GeoIQ (where) and that loop (what gets made, staffed, and stocked). It's built entirely on assets Lenskart has already named as strategic, not a new platform bolted on from outside. That's the distinction between a feature proposal and a strategy proposal.</p>
+    </section>
+
+    <!-- CLOSING -->
+    <section id="closing">
+      <p class="eyebrow"><span class="n">→</span>Why I'm Sharing This</p>
+      <h2>The honest version</h2>
+      <div class="closing-box fade">
+        <p class="cb-label">Fill this in yourself: 2–3 sentences max</p>
+        <p>[Replace with one specific, real example of a time you took an ambiguous problem and shipped something, ideally involving data, trade-offs, or a system with multiple stakeholders. Add one line on which part of Lenskart's stack excites you most and why. Keep it concrete and short. This is the only "about me" part of the document and it only works if it's genuinely yours.]</p>
+      </div>
+      <p class="fade">This was built entirely from public filings, earnings-call coverage, and Lenskart's own technology pages, no internal data, no insider access. I'd welcome the chance to do this properly, with your team's actual context and the real constraints I can't see from outside.</p>
+    </section>
+
+  </div><!-- /content -->
+
+  <!-- SOURCES FOOTER -->
+  <div class="sources-section" id="sources">
+    <div style="max-width:1120px; margin:0 auto;">
+      <p class="eyebrow" style="color:#4FBFB0"><span class="n" style="background:rgba(79,191,176,0.15); color:#4FBFB0">→</span>Sources</p>
+      <h2>Every claim, linked</h2>
+      <div class="src-list">
+        <div class="src-item" id="src1">
+          <span class="src-n">01</span>
+          <div class="src-body">
+            <a href="https://www.business-standard.com/markets/capital-market-news/lenskart-solutions-acquires-balance-stake-in-quantduo-technologies-126061000959_1.html" target="_blank" rel="noopener">Lenskart Solutions acquires balance stake in Quantduo Technologies (GeoIQ): Business Standard</a>
+            <p class="src-meta">June 10, 2026 · Confirms ownership moving 92.35% → 100%, total consideration ₹3.67 crore for remaining 7.65%</p>
+          </div>
+        </div>
+        <div class="src-item" id="src2">
+          <span class="src-n">02</span>
+          <div class="src-body">
+            <a href="https://entrackr.com/exclusive/exclusive-lenskart-set-to-acquire-location-ai-startup-geoiq-9347315" target="_blank" rel="noopener">Exclusive: Lenskart set to acquire location AI startup GeoIQ: Entrackr</a>
+            <p class="src-meta">2025 · Original majority-stake deal, GeoIQ's methodology and client roster (Zepto, HUL, Swiggy, CaratLane)</p>
+          </div>
+        </div>
+        <div class="src-item" id="src3">
+          <span class="src-n">03</span>
+          <div class="src-body">
+            <a href="https://www.medianama.com/2026/05/223-lenskart-ai-glasses-amid-mounting-privacy-concerns-q4-fy26-earnings-call/" target="_blank" rel="noopener">Lenskart rolls out AI glasses amid mounting privacy concerns: Q4 FY26 earnings call: MediaNama</a>
+            <p class="src-meta">May 2026 · "Consumer-AI company" framing, internal GeoIQ system, AI across manufacturing/eye testing/sales, B by Lenskart launch</p>
+          </div>
+        </div>
+        <div class="src-item" id="src4">
+          <span class="src-n">04</span>
+          <div class="src-body">
+            <a href="https://yourstory.com/2026/02/lenskart-q3-earnings-ai-remote-global-scale-optometry-unlock-compounding-growth-phase" target="_blank" rel="noopener">Lenskart taps AI, global scale, and remote optometry: YourStory</a>
+            <p class="src-meta">Feb 2026 · Q3 FY26: 60% eye test growth YoY, 49% first-time exams, EBITDA crossing 20% threshold</p>
+          </div>
+        </div>
+        <div class="src-item" id="src5">
+          <span class="src-n">05</span>
+          <div class="src-body">
+            <a href="https://pulse.d2cinsider.com/lenskart-bets-big-on-ai-in-fy27-as-d2c-eyewear-giant-accelerates-smart-retail-automation-and-eye-tech-expansion/" target="_blank" rel="noopener">Lenskart Bets Big on AI in FY27: D2C Insider Pulse</a>
+            <p class="src-meta">2026 · 30M → 100M eye test target, FY27 AI strategy across remote optometry, automation, omnichannel</p>
+          </div>
+        </div>
+        <div class="src-item" id="src6">
+          <span class="src-n">06</span>
+          <div class="src-body">
+            <a href="https://www.lenskart.com/corporate/ourtech" target="_blank" rel="noopener">Lenskart Corporate: Technology: lenskart.com</a>
+            <p class="src-meta">Primary source · Virtual Try-On, Remote Eye Test, Self Eye Test, Geo Analytics, Centralised Supply Chain &amp; Manufacturing</p>
+          </div>
+        </div>
+        <div class="src-item" id="src7">
+          <span class="src-n">07</span>
+          <div class="src-body">
+            <a href="https://geoiq.io/" target="_blank" rel="noopener">GeoIQ: Location Intelligence Platform: geoiq.io</a>
+            <p class="src-meta">Official site · AI-powered site selection, territory planning, consumer profiling across 100m×100m geospatial grids</p>
+          </div>
+        </div>
+      </div>
+      <p class="src-note">Note on sourcing: all claims in this case study are grounded in the above public sources, earnings call coverage, regulatory filings, Lenskart's own corporate technology page, and GeoIQ's platform documentation. Any improvement multipliers cited elsewhere in PM discourse (e.g. "5× faster store openings") have been excluded as they appear in PR-adjacent contexts rather than audited filings.</p>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── HEX CANVAS HERO ──
+(function(){
+  var cvs = document.getElementById('hex-canvas');
+  if(!cvs) return;
+  var ctx = cvs.getContext('2d');
+  function resize(){
+    cvs.width = cvs.parentElement.offsetWidth;
+    cvs.height = cvs.parentElement.offsetHeight;
+    draw();
+  }
+  function draw(){
+    var w=cvs.width, h=cvs.height;
+    ctx.clearRect(0,0,w,h);
+    var r=30;
+    var hx=Math.sqrt(3)*r, hy=r*1.5;
+    var cols=Math.ceil(w/hx)+2, rows=Math.ceil(h/hy)+2;
+    for(var c=-1;c<cols;c++){
+      for(var ri=-1;ri<rows;ri++){
+        var cx=c*hx+(Math.abs(ri)%2)*hx/2;
+        var cy=ri*hy;
+        if(cx<-hx||cx>w+hx||cy<-r*2||cy>h+r*2) continue;
+        drawHex(cx, cy, r, c, ri);
+      }
+    }
+  }
+  function drawHex(cx,cy,r,c,ri){
+    var pts=[];
+    for(var i=0;i<6;i++){
+      var a=Math.PI/180*(60*i-90);
+      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+    }
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for(var j=1;j<6;j++) ctx.lineTo(pts[j][0],pts[j][1]);
+    ctx.closePath();
+    var seed=(c*71+ri*113)%100;
+    if(seed<8){
+      ctx.fillStyle=seed<4?'rgba(14,107,94,0.25)':'rgba(201,114,0,0.18)';
+      ctx.fill();
+    }
+    ctx.strokeStyle='rgba(14,107,94,0.18)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  }
+  resize();
+  var t; window.addEventListener('resize',function(){clearTimeout(t);t=setTimeout(resize,200);});
+})();
+
+// ── ACTIVE NAV ──
+(function(){
+  var secs=document.querySelectorAll('section[id], .sources-section[id]');
+  var links=document.querySelectorAll('nav ul li a');
+  var map={};
+  links.forEach(function(l){
+    var href=l.getAttribute('href');
+    if(href&&href.startsWith('#')) map[href.slice(1)]=l;
+  });
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(l){l.classList.remove('active');});
+        var l=map[e.target.id];
+        if(l)l.classList.add('active');
+      }
+    });
+  },{rootMargin:'-30% 0px -55% 0px',threshold:0});
+  secs.forEach(function(s){if(s.id)io.observe(s);});
+})();
+
+// ── SCROLL REVEAL ──
+(function(){
+  var els=document.querySelectorAll('.fade');
+  var io=new IntersectionObserver(function(entries,ob){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('in');ob.unobserve(e.target);}
+    });
+  },{threshold:0.12});
+  els.forEach(function(el){io.observe(el);});
+})();
+</script>
+</body>
+</html>
