@@ -36,8 +36,8 @@ a:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:
 #menu-toggle:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
 
 /* ── OVERLAY ── */
-#nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;opacity:0;transition:opacity .25s ease;}
-#nav-overlay.open{opacity:1;}
+#nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;opacity:0;transition:opacity .25s ease;pointer-events:none;}
+#nav-overlay.open{opacity:1;pointer-events:auto;}
 
 /* ── SIDENAV ── */
 .sidenav{
@@ -45,7 +45,7 @@ a:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:
   background:var(--ink);color:#9FBDBA;
   padding:0;display:flex;flex-direction:column;
   border-right:1px solid rgba(255,255,255,0.06);
-  z-index:200;
+  z-index:400;
   scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;
 }
 .sidenav::-webkit-scrollbar{width:4px;}
@@ -155,8 +155,10 @@ cite-ref a:hover{background:var(--teal);color:#FFFFFF;}
 
 /* ── TAM/SAM/SOM ── */
 .tsm-wrap{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2vw,28px);margin:clamp(14px,1.5vw,24px) 0 clamp(20px,2vw,32px);align-items:start;}
-.circles-area{position:relative;width:100%;aspect-ratio:1;max-width:340px;}
-.circle-ring{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .25s;border:2px solid transparent;}
+.circles-area{position:relative;width:min(340px,80vw);aspect-ratio:1;margin:0 auto;}
+.circle-ring{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid transparent;transition:all .25s;cursor:pointer;}
+.circle-ring:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:50%;}
+.circles-area{touch-action:manipulation;}
 .circle-ring.tam{inset:0;background:rgba(201,114,0,0.06);border-color:rgba(201,114,0,0.25);}
 .circle-ring.sam{inset:15%;background:rgba(14,107,94,0.08);border-color:rgba(14,107,94,0.3);}
 .circle-ring.som{inset:33%;background:var(--teal);border-color:var(--teal);}
@@ -186,6 +188,7 @@ cite-ref a:hover{background:var(--teal);color:#FFFFFF;}
 .tag-som{background:var(--teal-lt);color:var(--teal2);}
 .tag-sam{background:var(--amber-lt);color:var(--amber);}
 .tag-tam{background:#F3F4F6;color:#6B7280;}
+.circles-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
 .tsm-card h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:10px;}
 .tsm-row{display:flex;flex-direction:column;gap:7px;}
 .tsm-attr{display:flex;gap:10px;font-size:13.5px;}
@@ -344,6 +347,35 @@ cite-ref a:hover{background:var(--teal);color:#FFFFFF;}
 .fade.in{opacity:1;transform:translateY(0);}
 
 /* ── MOBILE ── */
+/* ── ALTERNATIVES TABLE → CARDS (≤768px) ── */
+@media(max-width:768px){
+  .alt-table,.alt-table thead,.alt-table tbody,.alt-table tr,.alt-table th,.alt-table td{display:block;}
+  .alt-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+  .alt-table tr{
+    margin-bottom:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden;
+    background:var(--white);position:relative;
+  }
+  .alt-table tr.winner{border-left:3px solid var(--teal);background:linear-gradient(90deg,rgba(14,107,94,0.04) 0%,var(--white) 100%);}
+  .alt-table td{
+    border-bottom:1px solid var(--border);padding:10px 14px;font-size:14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .alt-table td:last-child{border-bottom:none;}
+  .alt-table td::before{
+    content:attr(data-label);flex:none;width:90px;
+    font-family:'Syne',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .alt-table td[data-label="Idea"]{flex-direction:column;align-items:flex-start;gap:2px;background:var(--ink);padding:14px;}
+  .alt-table td[data-label="Idea"]::before{color:#4FA89F;width:auto;}
+  .alt-table td[data-label="Idea"] .alt-name{color:#FFFFFF;font-size:15px;}
+  .alt-table td[data-label="Idea"] span{color:#6FA09A!important;}
+  .alt-table .winner-badge{font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--teal);color:#FFFFFF;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;}
+  .alt-table .dot-row{flex-wrap:wrap;}
+  .alt-table .dot-row .dot-label{margin-left:0;width:100%;}
+}
+
+/* ── MOBILE ── */
 @media(max-width:920px){
   .page{grid-template-columns:1fr;}
   #menu-toggle{display:flex;}
@@ -365,8 +397,15 @@ cite-ref a:hover{background:var(--teal);color:#FFFFFF;}
   .loop-node,.ll-node{flex:calc(50% - 4px);}
   .callout .shift{grid-template-columns:1fr;}
   .callout .arrow{transform:rotate(90deg);}
-  .circles-area{max-width:clamp(200px,60vw,280px);margin:0 auto;}
+  .circles-wrap{align-items:center;}
+  .circles-area{width:min(340px,70vw);touch-action:manipulation;}
+  .circle-ring{cursor:pointer;-webkit-tap-highlight-color:rgba(14,107,94,0.3);}
+  .circle-ring.som,.circle-ring.sam,.circle-ring.tam{min-width:44px;min-height:44px;}
+  .circle-label{padding:2px;white-space:nowrap;}
+  .cl-name{font-size:clamp(10px,1.5vw,12px);}
+  .cl-tag{font-size:clamp(9px,1.2vw,11px);}
 }
+
 </style>
 </head>
 <body>
@@ -574,23 +613,23 @@ cite-ref a:hover{background:var(--teal);color:#FFFFFF;}
   <p class="fade">The circles below aren't a wishlist. They're a sequenced argument: start with the opportunity that's grounded in existing data and solves a named bottleneck, build the infrastructure that makes the next circle possible, and earn the consumer platform last.</p>
 
   <div class="tsm-wrap fade">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+    <div class="circles-wrap">
       <div class="circles-area" id="circles">
-        <div class="circle-ring tam" data-target="card-tam" onclick="selectCircle('tam')">
+        <div class="circle-ring tam" data-circle="tam" role="button" tabindex="0" aria-selected="false" aria-label="TAM: Vision OS, 5+ years">
           <div class="circle-label">
             <span class="cl-tag">TAM</span>
             <span class="cl-name">Vision OS</span>
             <span class="cl-time">5+ years</span>
           </div>
         </div>
-        <div class="circle-ring sam" data-target="card-sam" onclick="selectCircle('sam')">
+        <div class="circle-ring sam" data-circle="sam" role="button" tabindex="0" aria-selected="false" aria-label="SAM: Intelligence Graph, 2-4 years">
           <div class="circle-label">
             <span class="cl-tag">SAM</span>
             <span class="cl-name">Intelligence Graph</span>
             <span class="cl-time">2-4 years</span>
           </div>
         </div>
-        <div class="circle-ring som active-som" data-target="card-som" onclick="selectCircle('som')">
+        <div class="circle-ring som active-som" data-circle="som" role="button" tabindex="0" aria-selected="true" aria-label="SOM: VCI Platform, Now">
           <div class="circle-label">
             <span class="cl-tag">SOM</span>
             <span class="cl-name">VCI Platform</span>
@@ -662,28 +701,28 @@ cite-ref a:hover{background:var(--teal);color:#FFFFFF;}
     </thead>
     <tbody>
       <tr>
-        <td><p class="alt-name">AI Glasses Trust Layer</p><span style="font-size:12px;color:var(--muted);">Privacy governance for B by Lenskart</span></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
-        <td><div class="dot-row"><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
+        <td data-label="Idea"><p class="alt-name">AI Glasses Trust Layer</p><span style="font-size:12px;color:var(--muted);">Privacy governance for B by Lenskart</span></td>
+        <td data-label="Business Impact"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
+        <td data-label="Execution Effort"><div class="dot-row"><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
+        <td data-label="Strategic Fit"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
       </tr>
       <tr>
-        <td><p class="alt-name">Vision OS</p><span style="font-size:12px;color:var(--muted);">Lifelong vision companion app</span></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><span class="dot-label">Very High</span></div></td>
-        <td><div class="dot-row"><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot on amber"></div><span class="dot-label">Very High</span></div></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
+        <td data-label="Idea"><p class="alt-name">Vision OS</p><span style="font-size:12px;color:var(--muted);">Lifelong vision companion app</span></td>
+        <td data-label="Business Impact"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><span class="dot-label">Very High</span></div></td>
+        <td data-label="Execution Effort"><div class="dot-row"><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot on amber"></div><span class="dot-label">Very High</span></div></td>
+        <td data-label="Strategic Fit"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
       </tr>
       <tr>
-        <td><p class="alt-name">Store Operations Copilot</p><span style="font-size:12px;color:var(--muted);">AI assistant for store managers</span></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
-        <td><div class="dot-row"><div class="dot on amber"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Low</span></div></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><span class="dot-label">High</span></div></td>
+        <td data-label="Idea"><p class="alt-name">Store Operations Copilot</p><span style="font-size:12px;color:var(--muted);">AI assistant for store managers</span></td>
+        <td data-label="Business Impact"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
+        <td data-label="Execution Effort"><div class="dot-row"><div class="dot on amber"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Low</span></div></td>
+        <td data-label="Strategic Fit"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><span class="dot-label">High</span></div></td>
       </tr>
       <tr class="winner">
-        <td><p class="alt-name">Vision Capacity Intelligence <span class="winner-badge">Selected</span></p><span style="font-size:12px;color:var(--muted);">GeoIQ extended into clinical capacity</span></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><span class="dot-label">High</span></div></td>
-        <td><div class="dot-row"><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
-        <td><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><span class="dot-label">Very High</span></div></td>
+        <td data-label="Idea"><p class="alt-name">Vision Capacity Intelligence <span class="winner-badge">Selected</span></p><span style="font-size:12px;color:var(--muted);">GeoIQ extended into clinical capacity</span></td>
+        <td data-label="Business Impact"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><span class="dot-label">High</span></div></td>
+        <td data-label="Execution Effort"><div class="dot-row"><div class="dot on amber"></div><div class="dot on amber"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="dot-label">Medium</span></div></td>
+        <td data-label="Strategic Fit"><div class="dot-row"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><span class="dot-label">Very High</span></div></td>
       </tr>
     </tbody>
   </table>
@@ -997,14 +1036,69 @@ cite-ref a:hover{background:var(--teal);color:#FFFFFF;}
 })();
 
 // ── TAM/SAM/SOM CIRCLES ──
+// Thresholds as fraction of radius (based on inset values):
+//   inset:33% → SOM extends to 34% of diameter → 0.34 of radius
+//   inset:15% → SAM extends to 70% of diameter → 0.70 of radius
+//   inset:0   → TAM extends to 100% of diameter → 1.0 of radius
+var CIRCLE_THRESHOLDS = { som: 0.34, sam: 0.70, tam: 1.0 };
+
 function selectCircle(which){
   document.querySelectorAll('.tsm-card').forEach(function(c){c.classList.remove('visible');});
-  document.querySelectorAll('.circle-ring').forEach(function(r){r.classList.remove('active-tam','active-sam','active-som');});
-  document.getElementById('card-'+which).classList.add('visible');
+  document.querySelectorAll('.circle-ring').forEach(function(r){
+    r.classList.remove('active-tam','active-sam','active-som');
+    r.setAttribute('aria-selected','false');
+  });
+  var card=document.getElementById('card-'+which);
+  if(card) card.classList.add('visible');
   var el=document.querySelector('.circle-ring.'+which);
-  if(el) el.classList.add('active-'+which);
+  if(el){
+    el.classList.add('active-'+which);
+    el.setAttribute('aria-selected','true');
+  }
 }
 selectCircle('som');
+
+// Coordinate-based hit testing — replaces element-level hit detection.
+// Rings have pointer-events:none so all pointer events hit .circles-area.
+// We compute tap distance from center and select ring by radius thresholds.
+(function(){
+  var area = document.getElementById('circles');
+  if(!area) return;
+
+  function hitTestRing(e){
+    var rect = area.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var dx = (e.clientX || e.changedTouches && e.changedTouches[0].clientX) - cx;
+    var dy = (e.clientY || e.changedTouches && e.changedTouches[0].clientY) - cy;
+    var dist = Math.sqrt(dx*dx + dy*dy) / (rect.width / 2);
+
+    // Guard: tap outside the outer circle
+    if(dist > 1.0) return;
+
+    // Assign ring by distance threshold
+    if(dist <= CIRCLE_THRESHOLDS.som) selectCircle('som');
+    else if(dist <= CIRCLE_THRESHOLDS.sam) selectCircle('sam');
+    else selectCircle('tam');
+  }
+
+  // pointerdown fires immediately on both touch and mouse, no 300ms delay
+  area.addEventListener('pointerdown', hitTestRing);
+
+  // Fallback for older browsers that don't support pointer events
+  area.addEventListener('click', hitTestRing);
+})();
+
+// Keyboard support: Enter and Space activate the focused ring
+document.querySelectorAll('.circle-ring[tabindex]').forEach(function(ring){
+  ring.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      var which = this.getAttribute('data-circle');
+      if(which) selectCircle(which);
+    }
+  });
+});
 
 // ── COLLAPSIBLE NAV GROUPS ──
 (function(){
